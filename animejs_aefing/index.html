@@ -7,13 +7,35 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <script>
+    <div class="pos">
+        <div class="square disabled draggable"></div>
+    </div>
+    <div class="pos">
+        <div class="label">swipe</div>
+    </div>
+    <script type="module">
+        import { createDraggable } from 'https://cdn.jsdelivr.net/npm/animejs/+esm';
+
         const SWIPE_THRESHOLD = 50;
         const MAX_SWIPE_TIME = 300;
 
         let startX = 0;
         let startY = 0;
         let startTime = 0;
+
+        const square = document.querySelector('.square.disabled');
+        const container = square.parentElement;
+
+        createDraggable('.square.disabled', {
+            container,
+            x: {
+                snap: value => {
+                    const rightPosition = container.clientWidth - square.offsetWidth;
+                    return value < rightPosition / 2 ? 0 : rightPosition;
+                }
+            },
+            y: false
+        });
 
         
 
