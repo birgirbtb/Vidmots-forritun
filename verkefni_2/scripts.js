@@ -1,67 +1,67 @@
-/*
-A good path is:
+const svg = document.querySelector("svg");
+const pieces = [...svg.querySelectorAll('g[id^="Piece"]')];
 
-1. **Create the square**
-   - Add a `<div>` in `index.html`.
-   - Give it width, height, and a background color in `styles.css`.
+const offsets = [
+    { x: -150, y: -100 },
+    { x: 150, y: -100 },
+    { x: -150, y: 100 },
+    { x: 150, y: 100 }
+];
 
-2. **Listen for touch input**
-   In `scripts.js`, look into Pointer Events:
-   - `pointerdown`
-   - `pointermove`
-   - `pointerup`
-   - `pointercancel`
+const states = new Map();
 
-3. **Track two fingers**
-   Store each pointer’s:
-   - `pointerId`
-   - `clientX`
-   - `clientY`
-
-   A `Map` is useful here because each finger has a unique `pointerId`.
-
-4. **Calculate the angle**
-   When you have two fingers, calculate the angle between them:
-
-   ```js
-   Math.atan2(y2 - y1, x2 - x1)
-   ```
-
-5. **Compare old and new angles**
-   On the first moment when two fingers are present, save the starting angle.
-
-   During movement:
-
-   ```text
-   rotation change = current angle - starting angle
-   ```
-
-6. **Apply the rotation**
-   Use CSS:
-
-   ```js
-   square.style.transform = `rotate(${angle}rad)`;
-   ```
-
-Important concepts to investigate:
-
-- Why `pointerId` is needed
-- Why you should store two pointer positions
-- What `Math.atan2()` returns
-- Why angles should usually be measured in radians
-- How CSS `transform: rotate()` works
-
-Start with just detecting and displaying the two pointer coordinates. Once that works, add angle calculation, and only then add the visual rotation.
-*/ 
-
-const square = document.getElementById("square");
-let angle = 45; // hversu margar gráður kassin hreyfist
-
-function rotateSquare(e) {
-    e.preventDefault();
-    square.style.transform = `rotate(${angle}deg)`;
-    angle += 45
+function svgPoint(event) {
+    const point = new DOMPoint(event.clientX, event.clientY);
+    return point.matrixTransform(svg.getScreenCTM().inverse());
 }
 
-square.addEventListener("pointerdown", rotateSquare);
+pieces.forEach((piece, index) => {
+    const state = {
+        x: offsets[index].x,
+        y: offsets[index].y,
+        startX: 0,
+        startY: 0,
+        dragging: false
+    };
 
+    states.set(piece, state);
+    piece.setAttribute("transform", `translate(${state.x} ${state.y})`);
+    piece.style.cursor = "grab";
+
+    piece.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+
+        const point = svgPoint(event);
+        state.startX = point.x - state.x;
+        state.startY = point.y - state.y;
+        state.dragging = true;
+
+        piece.setPointerCapture(event.pointerId);
+        piece.style.cursor = "grabbing";
+    });
+
+    piece.addEventListener("pointermove", (event) => {
+        if (!state.dragging) return;
+
+        const point = svgPoint(event);
+        state.x = point.x - state.startX;
+        state.y = point.y - state.startY;
+
+        piece.setAttribute(
+            "transform",
+            `translate(${state.x} ${state.y})`
+        );
+    });
+
+    piece.addEventListener("pointerup", (event) => {
+        state.dragging = false;
+        piece.releasePointerCapture(event.pointerId);
+        piece.style.cursor = "grab";
+
+        if (Math.hypot(state.x, state.y) < 60) {
+            state.x = 0;
+            state.y = 0;
+            piece.setAttribute("transform", "translate(0 0)");
+        }
+    });
+});
