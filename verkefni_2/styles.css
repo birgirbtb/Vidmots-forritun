@@ -4,16 +4,24 @@ body {
     display: grid;
     place-items: center;
     background: #dff3ff;
+    overflow: hidden;
 }
 
 svg {
-    width: min(90vw, 600px);
-    height: auto;
-    overflow: visible;
+    width: 100vw;
+    height: 100vh;
+    display: block;
     touch-action: none;
+}
+
+svg * {
+    touch-action: none;
+    pointer-events: all;
 }
 
 g[id^="Piece"] {
     transform-box: fill-box;
     transform-origin: center;
+    touch-action: none;
+    pointer-events: all;
 }
