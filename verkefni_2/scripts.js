@@ -1,3 +1,5 @@
+import { animate } from "https://cdn.jsdelivr.net/npm/animejs@4.5.0/+esm";
+
 const svg = document.querySelector("svg");
 const pieces = [...svg.querySelectorAll('g[id^="Piece"]')];
 
@@ -15,7 +17,25 @@ function svgPoint(event) {
     return point.matrixTransform(svg.getScreenCTM().inverse());
 }
 
+function pulseAnimation(event, loopOn) {
+    animate(event, {
+    scale: [1, 1.05],
+    duration: 1000,
+    ease: "inOutSine",
+    alternate: true,
+    loop: loopOn
+    });
+}
+
 pieces.forEach((piece, index) => {
+    const dragTarget = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+    );
+
+    piece.parentNode.insertBefore(dragTarget, piece);
+    dragTarget.appendChild(piece);
+
     const state = {
         x: offsets[index].x,
         y: offsets[index].y,
@@ -24,12 +44,19 @@ pieces.forEach((piece, index) => {
         dragging: false
     };
 
-    states.set(piece, state);
-    piece.setAttribute("transform", `translate(${state.x} ${state.y})`);
+    dragTarget.setAttribute(
+        "transform",
+        `translate(${state.x} ${state.y})`
+    );
+
     piece.style.cursor = "grab";
+
+    pulseAnimation(piece, true);
 
     piece.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+
+        pulseAnimation(piece, false)
 
         const point = svgPoint(event);
         state.startX = point.x - state.x;
@@ -47,7 +74,7 @@ pieces.forEach((piece, index) => {
         state.x = point.x - state.startX;
         state.y = point.y - state.startY;
 
-        piece.setAttribute(
+        dragTarget.setAttribute(
             "transform",
             `translate(${state.x} ${state.y})`
         );
@@ -61,7 +88,12 @@ pieces.forEach((piece, index) => {
         if (Math.hypot(state.x, state.y) < 60) {
             state.x = 0;
             state.y = 0;
-            piece.setAttribute("transform", "translate(0 0)");
+
+            dragTarget.setAttribute("transform", "translate(0 0)");
+
+            animate(piece, {scale: 1});
+        }   else {
+            pulseAnimation(piece, true);
         }
     });
 });

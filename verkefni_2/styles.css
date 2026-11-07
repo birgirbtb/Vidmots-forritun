@@ -14,5 +14,6 @@ svg {
 }
 
 g[id^="Piece"] {
-    transition: transform 0.15s ease;
+    transform-box: fill-box;
+    transform-origin: center;
 }
