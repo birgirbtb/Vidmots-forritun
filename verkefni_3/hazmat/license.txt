@@ -1,0 +1,11 @@
+Model Information:
+* title:	Backrooms Rigged Hazmat
+* source:	https://sketchfab.com/3d-models/backrooms-rigged-hazmat-64d0069ed0cc420d8b3158ab8a3e6405
+* author:	Loco (https://sketchfab.com/Loco420)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Backrooms Rigged Hazmat" (https://sketchfab.com/3d-models/backrooms-rigged-hazmat-64d0069ed0cc420d8b3158ab8a3e6405) by Loco (https://sketchfab.com/Loco420) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
