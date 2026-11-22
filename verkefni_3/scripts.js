@@ -20,7 +20,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Controls
+// camera controlls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
@@ -124,6 +124,7 @@ const hazmatActions = gltf.animations.map((clip) =>
 
 for (const action of hazmatActions) {
     action.play();
+    action.paused = true;
 }
 
 document.getElementById("stopHazmat").addEventListener("click", () => {
@@ -138,6 +139,24 @@ document.getElementById("startHazmat").addEventListener("click", () => {
         action.play();
     }
 });
+
+const previousHazmatPosition = gltf.scene.position.clone();
+let hazmatIsMoving = false;
+
+// keypress
+const keys = {};
+
+window.addEventListener("keydown", (event) => {
+    keys[event.key.toLowerCase()] = true;
+});
+
+window.addEventListener("keyup", (event) => {
+    keys[event.key.toLowerCase()] = false;
+});
+
+const cameraOffset = new THREE.Vector3(0, 3, -8);
+const moveSpeed = 5;
+const movementDirection = new THREE.Vector3();
 
 // bill loader
 const billLoader = new GLTFLoader();
@@ -165,13 +184,56 @@ for (const clip of billGltf.animations) {
     const timer = new THREE.Timer();
     timer.connect(document);
     
-    // Update loop
-    function update(time) {
-      timer.update(time);
-      // Advance the animation mixer by the elapsed time since the last frame.
-      mixer.update(timer.getDelta());
-      billMixer.update(timer.getDelta());
-      controls.update();
-      renderer.render(scene, camera);
+// Update loop
+function update(time) {
+    timer.update(time);
+
+    const delta = timer.getDelta();
+    const movement = moveSpeed * delta;
+    movementDirection.set(0, 0, 0);
+
+    if (keys.w) movementDirection.z -= 1;
+    if (keys.s) movementDirection.z += 1;
+    if (keys.a) movementDirection.x -= 1;
+    if (keys.d) movementDirection.x += 1;
+
+    if (movementDirection.lengthSq() > 0) {
+        movementDirection.normalize();
+
+        gltf.scene.position.addScaledVector(movementDirection, movement);
+
+        const angle = Math.atan2(
+            movementDirection.x,
+            movementDirection.z
+        );
+        gltf.scene.rotation.y = angle;
     }
+
+    hazmatIsMoving = movementDirection.lengthSq() > 0;
+
+    for (const action of hazmatActions) {
+      action.paused = !hazmatIsMoving;
+    }
+    const movementDelta = gltf.scene.position.clone()
+      .sub(previousHazmatPosition);
+
+    camera.position.add(movementDelta);
+    controls.target.copy(gltf.scene.position);
+    controls.update();
+
+    previousHazmatPosition.copy(gltf.scene.position);
+
+        mixer.update(delta);
+        billMixer.update(delta);
+        renderer.render(scene, camera);
+    const billPosition = billGltf.scene.position;
+    const hazmatPosition = gltf.scene.position;
+
+    const billAngle = Math.atan2(
+        hazmatPosition.x - billPosition.x,
+        hazmatPosition.z - billPosition.z
+    );
+
+billGltf.scene.rotation.y = billAngle;
+}
     renderer.setAnimationLoop(update);
